@@ -1,10 +1,11 @@
-##############################################################
-## Model to estimate effect of position on leadership tendency
-##############################################################
+###################################################################
+## Model to estimate effect of left-right position on leadership ##
+###################################################################
+
 model{
 
   for(g in 1:G){ # for each of G grops
-    leader[g] ~ dcat(w[g,1:N]) # Leader is drawn from a categorical distribution
+    leader[g] ~ dcat(w[g,1:N]) # Leader is drawn from a categorical distribution over all individuals
     for(i in 1:N){
       w[g,i] <- present[g,i]*exp(lp[g,i]) # relative probability of being leader
       lp[g,i] <- b1*position[g,i] + b2*(position[g,i]^2) + ind_RE[i] + was_leader[g,i]*ar_beta[g] 

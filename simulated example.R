@@ -78,7 +78,29 @@ leadership_data <- list(
   was_leader = was_leader
 )
 
-# estimate the model from simulated data
+# Estimate the model using JAGS; this uses MCMC so may take a few minutes
 leadership_fit <- run.jags("position model.jags",
                            data = leadership_data,
                            monitor = c("b1","b2","lambda","ar_beta_0","sigma_ind"))
+
+# look at summary statistics for estimated parameters
+summary(leadership_fit)
+
+# get all the MCMC samples
+leadership_mcmc <- do.call(rbind, leadership_fit$mcmc)
+
+# plot estimated and true leadership probabilities given position in a group of 5
+
+prediction_positions <- 0:4/4
+leadership_prob <- t(apply(leadership_mcmc,1,function(z){
+  w <- exp(z["b1"]*prediction_positions + z["b2"]*(prediction_positions^2))
+  w/sum(w)
+}))
+
+true_prob <- exp(b1*prediction_positions + b2*(prediction_positions^2))
+true_prob <- true_prob/sum(true_prob)
+
+plot(colMeans(leadership_prob), type = "o", ylim = c(0,0.5), xlab = "Position", ylab = "Leadership Probability")
+arrows(x0 = 1:5, y0 = apply(leadership_prob,2,quantile,probs=0.025), y1 = apply(leadership_prob,2,quantile,probs=0.975), angle = 90, code = 3, length = 0.01)
+points(true_prob, col = "red", pch = 16)
+legend(x = 2, y = 0.5, col = c("black","red"), pch = c(1,16), legend = c("Estimated", "True"))
