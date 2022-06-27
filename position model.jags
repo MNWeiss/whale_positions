@@ -1,0 +1,28 @@
+##############################################################
+## Model to estimate effect of position on leadership tendency
+##############################################################
+model{
+
+  for(g in 1:G){ # for each of G grops
+    leader[g] ~ dcat(w[g,1:N]) # Leader is drawn from a categorical distribution
+    for(i in 1:N){
+      w[g,i] <- present[g,i]*exp(lp[g,i]) # relative probability of being leader
+      lp[g,i] <- b1*position[g,i] + b2*(position[g,i]^2) + ind_RE[i] + was_leader[g,i]*ar_beta[g] 
+    }
+   ar_beta[g] <- ar_beta_0*exp(-lambda*lag[g]) # autocorrelation coefficient for group g
+  }
+  
+  b1 ~ dnorm(0,0.01) # priors for fixed effects
+  b2 ~ dnorm(0,0.01)
+  
+  lambda ~ dt(0,1,2) T(0,) # priors or AR component
+  ar_beta_0 ~ dnorm(0,0.1)
+  
+  for(i in 1:N){
+    ind_RE[i] ~ dnorm(0,tau_ind)
+  }
+  
+  tau_ind <- pow(sigma_ind,-2)
+  sigma_ind ~ dt(0,1,2) T(0,) # prior for individual variance
+
+}
